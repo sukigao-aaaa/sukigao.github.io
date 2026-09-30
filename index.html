@@ -1,0 +1,774 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>俳優 好き顔ソート</title>
+  <style>
+    :root {
+      --primary: #FF758F;
+      --primary-hover: #FF4D6D;
+      --bg: #FFF0F3;
+      --card-bg: #FFFFFF;
+      --text: #590D22;
+      --accent: #FFCCD5;
+      --sub-text: #800F2F;
+      --zoom-scale: 1.15;
+    }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+      margin: 0;
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+      box-sizing: border-box;
+      overflow-x: hidden; /* 横スクロールの発生を防ぐ */
+    }
+    .container {
+      width: 100%;
+      max-width: 600px;
+      background: var(--card-bg);
+      border-radius: 24px;
+      box-shadow: 0 10px 25px rgba(255, 117, 143, 0.15);
+      padding: 16px;
+      box-sizing: border-box;
+      border: 2px solid #FFB3C1;
+    }
+    h1, h2, h3 {
+      text-align: center;
+      color: var(--text);
+      margin-top: 0;
+      word-break: break-all;
+    }
+    h1 {
+      font-size: 1.5rem;
+      color: var(--primary-hover);
+    }
+    .app-desc {
+      text-align: center;
+      font-size: 0.95rem;
+      color: var(--sub-text);
+      margin-bottom: 16px;
+      line-height: 1.5;
+      background: var(--bg);
+      padding: 12px;
+      border-radius: 14px;
+      font-weight: 500;
+      box-sizing: border-box;
+    }
+    .btn {
+      background-color: var(--primary);
+      color: white;
+      border: none;
+      padding: 14px 20px;
+      border-radius: 16px;
+      font-weight: bold;
+      cursor: pointer;
+      width: 100%;
+      margin-top: 12px;
+      font-size: 1.05rem;
+      display: block;
+      box-sizing: border-box;
+      text-align: center;
+      box-shadow: 0 4px 12px rgba(255, 117, 143, 0.3);
+      transition: all 0.2s;
+    }
+    .btn:active {
+      transform: translateY(2px);
+      box-shadow: none;
+    }
+    .btn-secondary { background-color: #A3A3A3; box-shadow: none; }
+    .btn-outline {
+      background-color: #FFF;
+      color: var(--primary-hover);
+      border: 2px solid var(--accent);
+      box-shadow: none;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+      margin: 16px 0;
+      box-sizing: border-box;
+    }
+    @media (min-width: 450px) {
+      .grid-3 { grid-template-columns: repeat(3, 1fr); }
+    }
+     @media (max-width: 449px) {
+      .grid-3 { grid-template-columns: repeat(2, 1fr); }
+    }
+    .card {
+      border: 2px solid #FFCCD5;
+      border-radius: 16px;
+      padding: 10px;
+      text-align: center;
+      cursor: pointer;
+      background: white;
+      transition: all 0.2s;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      box-sizing: border-box;
+      width: 100%;
+    }
+    .card.selected {
+      border-color: var(--primary);
+      background-color: #FFF0F3;
+      transform: scale(1.02);
+      box-shadow: 0 6px 16px rgba(255, 117, 143, 0.25);
+    }
+    .card-img-wrapper {
+      width: 100%;
+      aspect-ratio: 1 / 1;
+      border-radius: 12px;
+      overflow: hidden;
+      background-color: #f0f0f0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 8px;
+      position: relative;
+      box-sizing: border-box;
+    }
+    .square-img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .placeholder-icon {
+      font-size: 3rem;
+      color: #aaa;
+    }
+    .card-name {
+      font-weight: bold;
+      font-size: 0.95rem;
+      color: var(--text);
+      word-break: break-all;
+    }
+    .search-input {
+      width: 100%;
+      padding: 12px;
+      border: 2px solid #FFCCD5;
+      border-radius: 14px;
+      font-size: 1rem;
+      box-sizing: border-box;
+      outline: none;
+      margin-bottom: 12px;
+    }
+    .search-input:focus {
+      border-color: var(--primary);
+    }
+    .catalog-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      max-height: 450px;
+      overflow-y: auto;
+      margin-bottom: 16px;
+      box-sizing: border-box;
+    }
+    .catalog-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 14px;
+      background: #FFF0F3;
+      border-radius: 12px;
+      border: 1px solid #FFCCD5;
+      font-weight: bold;
+      font-size: 1rem;
+      color: var(--text);
+      box-sizing: border-box;
+    }
+    .catalog-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-width: 0;
+    }
+    .catalog-thumb {
+      width: 50px;
+      height: 50px;
+      border-radius: 8px;
+      overflow: hidden;
+      background: #f0f0f0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+      flex-shrink: 0;
+      position: relative;
+    }
+    .catalog-num {
+      font-size: 0.85rem;
+      color: var(--primary-hover);
+      font-weight: normal;
+    }
+    .grid-9 {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      margin: 16px 0;
+      box-sizing: border-box;
+    }
+    .grid-9-card {
+      position: relative;
+      border: 2px solid #FFCCD5;
+      border-radius: 14px;
+      padding: 8px 4px 6px 4px;
+      text-align: center;
+      background: white;
+      box-sizing: border-box;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .grid-9-card.rank-1 {
+      border-color: #FF4D6D;
+      background: #FFF0F3;
+      box-shadow: 0 4px 12px rgba(255, 77, 109, 0.2);
+    }
+    .grid-9-card .badge {
+      position: absolute;
+      top: -5px;
+      left: -5px;
+      background: var(--primary);
+      color: white;
+      font-size: 0.75rem;
+      font-weight: bold;
+      padding: 2px 5px;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.15);
+      z-index: 2;
+    }
+    .grid-9-card.rank-1 .badge {
+      background: #FF4D6D;
+      font-size: 0.85rem;
+    }
+    .grid-9-thumb {
+      width: 100%;
+      aspect-ratio: 1 / 1;
+      border-radius: 8px;
+      overflow: hidden;
+      background: #f0f0f0;
+      margin-top: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.8rem;
+      position: relative;
+      box-sizing: border-box;
+    }
+    .grid-9-card .name {
+      font-size: 0.8rem;
+      font-weight: bold;
+      color: var(--text);
+      margin-top: 6px;
+      word-break: break-all;
+    }
+    .step-desc {
+      background: #FFF0F3;
+      padding: 12px;
+      border-radius: 12px;
+      font-size: 0.9rem;
+      margin-bottom: 12px;
+      border: 1px dashed var(--primary);
+      color: var(--sub-text);
+      box-sizing: border-box;
+    }
+    .ranking-list { list-style: none; padding: 0; margin: 0; }
+    .ranking-item {
+      display: flex;
+      align-items: center;
+      padding: 10px;
+      border-bottom: 1px solid #FFCCD5;
+      gap: 10px;
+      box-sizing: border-box;
+    }
+    .ranking-num {
+      font-size: 1rem;
+      font-weight: bold;
+      width: 30px;
+      color: var(--primary-hover);
+      flex-shrink: 0;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+
+  <div id="screen-main">
+    <h1>俳優 好き顔ソート</h1>
+    <div class="app-desc">
+      10代～20代の若手俳優の好き顔ソートです。
+    </div>
+    <div style="background:#FFF0F3; padding:16px; border-radius:14px; text-align:center; margin-bottom:16px; color: var(--sub-text); border: 1px solid #FFCCD5; box-sizing:border-box;">
+      登録メンバー: <strong id="total-count" style="font-size: 1.2rem; color: var(--primary-hover);">85</strong> 人
+    </div>
+    <button class="btn" onclick="startStage1()">ソートを開始する</button>
+  </div>
+
+  <div id="screen-stage1" style="display:none;">
+    <div class="step-desc">
+      <strong>ステップ 1/3</strong><br>表示された中から、好きな顔を最大3人選んで次へを押してください。
+    </div>
+    <div class="grid grid-3" id="stage1-grid"></div>
+    <button class="btn" onclick="nextStage1Group()">次へ進む</button>
+    <button class="btn btn-secondary" onclick="prevStage1Group()" style="margin-top:10px;">ひとつ前のグループに戻る</button>
+  </div>
+
+  <div id="screen-stage2" style="display:none;">
+    <div class="step-desc">
+      <strong>ステップ 2/3</strong><br>絞り込んで選んでください。
+    </div>
+    <div class="grid" id="stage2-grid"></div>
+    <button class="btn" onclick="nextStage2Group()">次へ進む</button>
+    <button class="btn btn-secondary" onclick="prevStage2Group()" style="margin-top:10px;">ひとつ前のグループに戻る</button>
+  </div>
+
+  <div id="screen-stage3" style="display:none;">
+    <div class="step-desc">
+      <strong>ステップ 3/3 （最終比較）</strong><br>どちらか好きな顔を選んでタップしてください。
+    </div>
+    <div class="grid" id="stage3-grid"></div>
+    <button class="btn btn-secondary" onclick="prevStage3Pair()" style="margin-top:16px;">ひとつ前の比較に戻る</button>
+  </div>
+
+  <div id="screen-result" style="display:none;">
+    <h2>最終結果</h2>
+    <div class="grid-9" id="grid-9-container"></div>
+    <div id="sub-result-container" style="display:none; margin-top:16px;">
+      <h3 style="font-size:1.05rem; color:var(--sub-text);">10位以降</h3>
+      <ul class="ranking-list" id="result-list"></ul>
+    </div>
+    <button class="btn btn-outline" style="margin-top:16px;" onclick="openCatalog()">俳優一覧を見る</button>
+    <button class="btn" onclick="showScreen('screen-main')" style="margin-top:10px;">もう一度ソートする</button>
+  </div>
+
+  <div id="screen-catalog" style="display:none;">
+    <h2>登録俳優一覧</h2>
+    <input type="text" id="catalogSearch" class="search-input" placeholder="名前で検索..." oninput="filterCatalog()">
+    <div style="font-size:0.85rem; color:var(--sub-text); text-align:right; margin-bottom:8px;">
+      該当: <span id="catalogCount">85</span> / <span id="catalogTotalCount">85</span>人
+    </div>
+    <div class="catalog-list" id="catalogList"></div>
+    <button class="btn btn-secondary" onclick="showScreen('screen-result')">結果画面へ戻る</button>
+    <button class="btn" style="margin-top:10px;" onclick="showScreen('screen-main')">トップ画面へ戻る</button>
+  </div>
+
+</div>
+  
+<script>
+const ACTORS = [
+  { id: 1, name: "青木 柚", search: "あおき ゆず aoki yuzu", img: "https://www.humanite.co.jp/img/actor/42_aoki_main.jpg", pos: "center", zoom: 1.4 },
+  { id: 2, name: "青山 凌大", search: "あおやま りょうた aoyama ryota", img: "https://thetv.jp/i/tl/200/0066/2000066199_r.jpg?w=646", pos: "top", zoom: 1.8 },
+  { id: 3, name: "阿久津 仁愛", search: "あくつ にちか akutsu nichika", img: "https://www.cubeinc.co.jp/wp/wp-content/uploads/2020/05/akutsunichika_20260330.jpg", pos: "top" },
+  { id: 4, name: "荒木 飛羽", search: "あらき とわ araki towa", img: "https://www.sweetpower.jp/wp-content/uploads/4513dfd9b5fe21657d59c817c9e1347e.png", pos: "center" },
+  { id: 5, name: "井内 悠陽", search: "いうち はるひ iuchi haruhi", img: "https://www.watanabepro.co.jp/img/profile/90000037.jpg", pos: "center" },
+  { id: 6, name: "池田 匡志", search: "いけだ まさし ikeda masashi", img: "https://www.aplus-japan.com/wp/wp-content/uploads/2021/07/ESC_0353-1%E3%82%AB%E3%83%83%E3%83%88-scaled.jpg", pos: "top" },
+  { id: 7, name: "石山 順征", search: "いしやま じゅんせい ishiyama junsei", img: "https://www.kdash.jp/kdash/files/blog/profile/blog_posts/2026/06/00000059_image1.jpg?171394173", pos: "center" },
+  { id: 8, name: "一ノ瀬 颯", search: "いちのせ はやて ichinose hayate", img: "https://www.ken-on.co.jp/wp-content/uploads/img/artists/imgactm_ichinose_l.jpg", pos: "top", zoom: 1.8 },
+  { id: 9, name: "伊藤 あさひ", search: "いとう あさひ itou asahi", img: "https://www2.ken-on.com/img/profile/photo_sp/ito_asahi.jpg", pos: "left", zoom: 1.8 },
+  { id: 10, name: "絃瀬 聡一", search: "いとせ そういち itose soichi", img: "https://www.horipro.co.jp/wp-content/uploads/sites/834/2024/12/3c75a208c1f739e77840ea15ff71550c.jpg", pos: "top", zoom: 1.6 },
+  { id: 11, name: "井上 想良", search: "いのうえ そら inoue sora", img: "https://www.watanabepro.co.jp/img/profile/10000086.jpg", pos: "top", zoom: 1.8 },
+  { id: 12, name: "井上 祐貴", search: "いのうえ ゆうき inoue yuki", img: "https://www.horipro.co.jp/wp-content/uploads/sites/505/2023/09/inoue.jpg", pos: "top", zoom: 1.8 },
+  { id: 13, name: "今井 竜太郎", search: "いまい りゅうたろう imai ryutaro", img: "https://www.ohtapro.co.jp/talent/imairyutaro/images/imairyutaro03-L.jpg", pos: "top", zoom: 1.8 },
+  { id: 14, name: "岩瀬 洋志", search: "いわせ ようじ iwase yoji", img: "https://www.aplus-japan.com/wp/wp-content/uploads/2023/03/%E5%B2%A9%E7%80%AC%E6%B4%8B%E5%BF%97-%E6%96%B02-scaled.jpg", pos: "top" },
+  { id: 15, name: "宇佐 卓真", search: "うさ たくま usa takuma", img: "https://asobisystem.com/wp-content/uploads/2022/07/usatakuma_241114_topthum-1.jpg", pos: "center" },
+  { id: 16, name: "植野 花道", search: "うえの はなみち ueno hanamichi", img: "https://whaz.jp/wp-content/uploads/2024/06/%E6%A4%8D%E9%87%8E%E8%8A%B1%E9%81%93-%E5%AE%A3%E6%9D%90-scaled.jpg", pos: "top", zoom: 1.8 },
+  { id: 17, name: "植村 颯太", search: "うえむら そうた uemura sota", img: "https://mr8.jp/wp-content/uploads/2026/06/%E8%A7%A3%E7%A6%81%E7%94%A8_%E3%80%90%E6%A4%8D%E6%9D%91%E9%A2%AF%E5%A4%AA%E3%80%91%E5%AE%A3%E6%9D%90%E5%86%99%E7%9C%9F.jpeg", pos: "top", zoom: 2.0 },
+  { id: 18, name: "奥 智哉", search: "おく ともや oku tomoya", img: "https://amuseplus.jp/img/1/artm/1/A88/A8861_jpg.jpg", pos: "center" },
+  { id: 19, name: "奥平 大兼", search: "おくだいら だいけん okudaira daiken", img: "https://ogre.natalie.mu/artist/116403/20240219/okudairadaiken_art202402.jpg?imwidth=640&imdensity=1", pos: "top" },
+  { id: 20, name: "奥野 壮", search: "おくの そう okuno so", img: "https://prcdn.freetls.fastly.net/release_image/71793/710/71793-710-e50c8fffe304ac6c64aeff96dd2d4a51-1170x1750.jpg?width=1950&height=1350&quality=85%2C65&format=jpeg&auto=webp&fit=bounds&bg-color=fff", pos: "top" },
+  { id: 21, name: "押田 岳", search: "おしだ がく oshida gaku", img: "https://g-starpro.jp/profile//upload/20250131172718.jpg", pos: "top", zoom: 1.8 },
+  { id: 22, name: "金子 隼也", search: "かねこ しゅんや kaneko shunya", img: "https://www.horipro.co.jp/wp-content/uploads/sites/674/2025/04/fb7e984c0bb8e489be87ea778f6d64e9.jpg", pos: "center" },
+  { id: 23, name: "簡 秀吉", search: "かん ひでよし kan hideyoshi", img: "https://mr8.jp/wp-content/uploads/2026/04/%E3%80%90%E7%B0%A1%E7%A7%80%E5%90%89%E3%80%91%E5%AE%A3%E6%9D%90%E5%86%99%E7%9C%9F-scaled.jpg", pos: "top", zoom: 2.0 },
+  { id: 24, name: "皆藤 空良", search: "かいとう そら kaitou sora", img: "https://horipro-digital-entertainment.co.jp/sys/wp-content/uploads/2023/09/a943409bab65145e924022dd91507c2c-1-scaled.jpg", pos: "top" },
+  { id: 25, name: "岐洲 匠", search: "きず たくみ kizu takumi", img: "https://www.web-foster.com/wp-content/uploads/2022/06/db72b5849d8bb819fd846470d8d92421.jpg", pos: "top" },
+  { id: 26, name: "木村 魁希", search: "きむら かいき kimura kaiki", img: "https://a-light.jp/wp/wp-content/uploads/2025/05/K_Kaiki-1.jpg", pos: "top", zoom: 1.8 },
+  { id: 27, name: "窪塚 愛琉", search: "くぼづか あいる kubozuka airu", img: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQmAwMLG_A1VyFmQgLDLLlwZaWsHPoV5FX36Crz8BvIHaBg2ZoNT6Sk8rE&s=10", pos: "top", zoom: 1.6 },
+  { id: 28, name: "黒川 想矢", search: "くろかわ そうや kurokawa soya", img: "https://nicola.jp/wp-content/uploads/2024/07/2426e811d7574a6de4c5772df1c60252-682x1024.png", pos: "top" },
+  { id: 29, name: "小西 詠斗", search: "こにし えいと konishi eito", img: "https://horipro-digital-entertainment.co.jp/sys/wp-content/uploads/2023/09/98c73af31f1037208d0e62052673d9e8-scaled.jpg", pos: "top" },
+  { id: 30, name: "小林 虎之介", search: "こばやし とらのすけ kobayashi toranosuke", img: "https://fam-fansite.imgix.net/shared_file/5657/ee56c01e-d5a6-4e24-803e-d0d132f45008.png?auto=format&s=4d55c219daf1dd916e8b80d08904ad67", pos: "top" },
+  { id: 31, name: "駒木根 葵汰", search: "こまぎね きいた komagine kiita", img: "https://www.horipro.co.jp/wp-content/uploads/sites/506/2021/05/0d40a5e4a645fc6b96e767d64ac0878e.png", pos: "top" },
+  { id: 32, name: "齋藤 潤", search: "さいとう じゅん saitou jun", img: "https://theatre-ent.co.jp/wp-content/themes/theatre-ent/images/profile/artist/saito/01_saito.jpg?250122", pos: "top" },
+  { id: 33, name: "齋藤 璃佑", search: "さいとう りゅう saitou ryu", img: "https://saitoryu.com/s3/skiyaki/uploads/link/image/77504/TOP_SP_002.jpg", pos: "top", zoom: 1.5 },
+  { id: 34, name: "坂井 翔", search: "さかい しょう sakai sho", img: "https://bitfan-id.s3.ap-northeast-1.amazonaws.com/store/cf3bdf8f6d5f66f5c1793eff48d08557.png", pos: "top", zoom: 1.7 },
+  { id: 35, name: "酒井 大成", search: "さかい たいせい sakai taisei", img: "https://storage.googleapis.com/studio-cms-assets/projects/V5a7jkGVqR/s-700x700_v-fs_webp_b4706663-d83b-49e0-94a7-a361ae8f4e1c.jpg", pos: "top", zoom: 1.8 },
+  { id: 36, name: "佐藤 瑠雅", search: "さとう りゅうが satou ryuga", img: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSvLAf2jotC_UkJL6H5VW0xFaIXKxJf2eO0XEV-9Rg1T_N6f8FxlPKgjsM&s=10", pos: "top" },
+  { id: 37, name: "四坂 亮翔", search: "しさか りょうと sisaka ryoto", img: "https://www.mensnonno.jp/wp-content/uploads/2023/10/shisaka2-1.jpg", pos: "top", zoom: 1.8 },
+  { id: 38, name: "柴崎 楓雅", search: "しばざき ふうが shibazaki fuga", img: "https://www.stardust.co.jp/wp-content/uploads/2024/08/sibazakifuga_sen01.jpg", pos: "top" },
+  { id: 39, name: "庄司 浩平", search: "しょうじ こうへい shoji kohei", img: "https://www.oscarpro.co.jp/uploads/2016/06/shoji_2025_540w.jpg", pos: "top" },
+  { id: 40, name: "菅生 新樹", search: "すごう あらき sugou araki", img: "https://prcdn.freetls.fastly.net/release_image/13614/22/13614-22-51ddc39a883c1bbf29ba33337748b626-1044x1568.jpg?format=jpeg&auto=webp&fit=bounds&width=2400&height=1260", pos: "center" },
+  { id: 41, name: "鈴木 仁", search: "すずき じん suzuki jin", img: "https://www.mensnonno.jp/wp-content/uploads/2020/07/jin2-1.jpg", pos: "top" },
+  { id: 42, name: "鈴木 秀脩", search: "すずき ひではる suzuki hideharu", img: "https://img-mdpr.freetls.fastly.net/article/P6H8/nm/P6H8GQD2SIMMIUbBQAKON9wTJmCePEnjAND3A5_Ow3I.jpg?width=700&disable=upscale&auto=webp&quality=80", pos: "top", zoom: 1.8 },
+  { id: 43, name: "世古口 凌", search: "せこぐち りょう sekoguchi ryo", img: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ-NzP5CdwSZhhuuOu548PIovqscACQWkePRSB4-dOkc1QikhJ6uzkR0Gg&s=10", pos: "top" },
+  { id: 44, name: "曽田 陵介", search: "そた りょうすけ sota ryosuke", img: "https://mr8.jp/wp-content/uploads/2025/07/%E6%9B%BD%E7%94%B0%E9%99%B5%E4%BB%8B_%E5%AE%A3%E6%9D%90%E5%86%99%E7%9C%9F-scaled.jpg", pos: "top", zoom: 1.6 },
+  { id: 45, name: "高橋 文哉", search: "たかはし ふみや takahashi fumiya", img: "https://takahashifumiya.com/assets/main2Sp-CNb96hq5.png", pos: "top" },
+  { id: 46, name: "谷原 七音", search: "たにはら ななと tanihara nanato", img: "https://universal-press.jp/wp-content/uploads/2025/04/IMG_1641b.jpg", pos: "top" },
+  { id: 47, name: "知念 英和", search: "ちねん ひでかず chinen hidekazu", img: "https://www.stardust.co.jp/wp-content/uploads/2022/05/dc4a3377470597c18b2ea02bcd9d060a.jpg", pos: "top" },
+  { id: 48, name: "綱 啓永", search: "つな けいと tsuna keito", img: "https://www.tsunakeito.com/images/top/hero_main_sp.jpg", pos: "top", zoom: 1.8 },
+  { id: 49, name: "柊太郎", search: "とうたろう totaro", img: "https://fast-tokyo.com/wp-content/uploads/XX_2198-scaled.jpg", pos: "top" },
+  { id: 50, name: "豊田 裕大", search: "とよだ ゆうだい toyoda yudai", img: "https://topcoat.co.jp/s3/skiyaki/uploads/artist_photo/image/19865/toyoda_Asha_1207.jpg", pos: "top" },
+  { id: 51, name: "富樫 庵", search: "とがし いおり togashi iori", img: "https://meteora-pro.com/wp/wp-content/uploads/2024/04/20240425_me-0206.jpg", pos: "top" },
+  { id: 52, name: "富樫 慧士", search: "とがし えいじ togashi eiji", img: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQSzA2NkPBR6TTSwtywf-sIyas3L5M44q3nAkK2eWaWr2P9IpUTNw-9hxo&s=10", pos: "top" },
+  { id: 53, name: "富本 惣昭", search: "とみもと そうしょう tomimoto sosho", img: "https://www.stardust.co.jp/wp-content/uploads/2022/05/tomimotosousyo_sen02.jpg", pos: "top" },
+  { id: 54, name: "中川 翼", search: "なかがわ つばさ nakagawa tsubasa", img: "https://topcoat.co.jp/s3/skiyaki/uploads/artist_photo/image/25564/Nakagawa_Tsubasa_Top_%E5%BC%95%E3%81%8D_.jpg", pos: "top" },
+  { id: 55, name: "中沢 元紀", search: "なかざわ もとき nakazawa motoki", img: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSz5zAVHFCytnyxtMrRrtWMV8-p6OAVmTE_4AlgMzZjc77UDapBLem4Guc&s=10", pos: "top", zoom: 1.8 },
+  { id: 56, name: "中山 翔貴", search: "なかやま しょうき nakayama shoki", img: "https://www.watanabepro.co.jp/img/profile/10000093.jpg", pos: "top", zoom: 1.8 },
+  { id: 57, name: "夏生 大湖", search: "なつき おおみ natsuki oomi", img: "https://www.web-foster.com/wp-content/uploads/2022/06/4ac8f58e1e326d31cb493e8a92f926e8.jpg", pos: "top" },
+  { id: 58, name: "新原 泰佑", search: "にいはら たいすけ niihara taisuke", img: "https://amuseplus.jp/img/1/artm/1/A89/A8954_jpg.jpg", pos: "top", zoom: 1.8 },
+  { id: 59, name: "西垣 匠", search: "にしがき しょう nishigaki sho", img: "https://www.toho-ent.co.jp/wp-content/uploads/2020/12/1767263455.jpg", pos: "top" },
+  { id: 60, name: "野村 康太", search: "のむら こうた nomura kouta", img: "https://www.ken-on.co.jp/wp-content/uploads/imgactm_nomura_l.jpg", pos: "top" },
+  { id: 61, name: "萩原 利久", search: "hagiwara riku", img: "https://topcoat.co.jp/s3/skiyaki/uploads/artist_photo/image/25483/Riku_Hagiwara_Top_.jpg", pos: "top" },
+  { id: 62, name: "濱尾 ノリタカ", search: "はまお ノリタカ hamao noritaka", img: "https://i.fod.fujitv.co.jp/imf/synth/w=540,h=540,a=0,u=0,f=webp:auto/img/person/M20-0555.jpg", pos: "top" },
+  { id: 63, name: "葉山 侑樹", search: "はやま ゆうき hayama yuki", img: "https://www.stardust.co.jp/wp-content/uploads/2025/07/hayamayuuki_sen01.jpg", pos: "top" },
+  { id: 64, name: "日向 亘", search: "ひゅうが わたる hyuga wataru", img: "https://wataruhyuga.fanpla.jp/static/fcopen/contents/top_image/240/21a832e2bd6b32143ec89c7aa2e6660b.jpeg", pos: "top", zoom: 1.8 },
+  { id: 65, name: "日野 友輔", search: "ひの ゆうすけ hino yusuke", img: "https://www.watanabepro.co.jp/img/profile/11000019.jpg", pos: "top", zoom: 1.8 },
+  { id: 66, name: "兵頭 功海", search: "ひょうどう かつみ hyodo katsumi", img: "https://res.cloudinary.com/vivimedia/image/fetch/f_auto,q_auto:eco,dpr_2,w_375/https://www.vivi.tv/wp-content/uploads/2024/02/19164949/top212.jpg", pos: "top" },
+  { id: 67, name: "樋口 幸平", search: "ひぐち こうへい higuchi kohei", img: "https://www.horipro.co.jp/wp-content/uploads/sites/758/2023/11/46ae1855d368ad9d7d89de899dfd47d1.jpg", pos: "top" },
+  { id: 68, name: "福松 凜", search: "ふくまつ りん fukumatsu rin", img: "https://i.fod.fujitv.co.jp/imf/synth/w=540,h=540,a=0,u=0,f=webp:auto/img/person/M20-0487.jpg", pos: "top" },
+  { id: 69, name: "藤岡 真威人", search: "ふじおか まいと fujioka maito", img: "https://storage.googleapis.com/denkei-firstweb.appspot.com/upload/89181524-717f-11ef-a9c2-9caf81d28632", pos: "top" },
+  { id: 70, name: "藤林 泰也", search: "ふじばやし やすなり fujibayashi yasunari", img: "https://trustar.co.jp/wp-content/uploads/2021/01/8ff323bfd73389b77dfcdd972b55c78d-scaled.jpeg", pos: "center" },
+  { id: 71, name: "藤本 洸大", search: "ふじもと こうだい fujimoto kodai", img: "https://topcoat.co.jp/s3/skiyaki/uploads/artist_photo/image/25478/%E6%96%B0%E3%82%A2%E3%83%BC%E5%86%99_%E5%BC%95%E3%81%8D_.jpg", pos: "top", zoom: 1.8 },
+  { id: 72, name: "冬野 心央", search: "ふゆの みお fuyuno mio", img: "https://www.stardust.co.jp/wp-content/uploads/2026/01/fuyunomio_sen03-367x550.jpg", pos: "top" },
+  { id: 73, name: "別府 由来", search: "べっぷ ゆらい beppu yurai", img: "https://www.stardust.co.jp/wp-content/uploads/2026/01/beppuyurai_sen05.jpg", pos: "top" },
+  { id: 74, name: "本田 響矢", search: "ほんだ きょうや honda kyoya", img: "https://www.aplus-japan.com/wp/wp-content/uploads/2023/11/ESC_1454-1300dpi2-scaled.jpg", pos: "top" },
+  { id: 75, name: "本島 純政", search: "もとじま じゅんせい motojima junsei", img: "https://www.asmart.jp/images/shop/905999/Txt1DdQs5zyWRwWZz7vDALrhY4Aek8Sq.jpg", pos: "top", zoom: 1.8 },
+  { id: 76, name: "前田 拳太郎", search: "まえだ けんたろう maeda kentaro", img: "https://ogre.natalie.mu/artist/120674/20210722/maedakentaro_art202107.jpg?imwidth=640&imdensity=1", pos: "top" },
+  { id: 77, name: "松本 仁", search: "まつもと じん matsumoto jin", img: "https://palum.co.jp/wp-content/uploads/2023/08/260528_2052-scaled-e1782984862599.jpg", pos: "top" },
+  { id: 78, name: "松本 怜生", search: "まつもと れお matsumoto reo", img: "https://mr8.jp/wp-content/uploads/2026/03/%E3%80%90%E6%9D%BE%E6%9C%AC%E6%80%9C%E7%94%9F%E3%80%91%E5%AE%A3%E6%9D%90%E5%86%99%E7%9C%9F_1-scaled.jpg", pos: "top", zoom: 1.8 },
+  { id: 79, name: "水沢 林太郎", search: "みずさわ りんたろう mizusawa rintaro", img: "https://www.ken-on.co.jp/wp-content/uploads/imgactm_mizusawa_l.jpg", pos: "top", zoom: 1.8 },
+  { id: 80, name: "森本 陸斗", search: "もりもと りくと morimoto rikuto", img: "https://www.stardust.co.jp/wp-content/uploads/2022/05/morimotorikuto_sen04-367x550.jpg", pos: "top" },
+  { id: 81, name: "山田 健人", search: "やまだ けんと yamada kento", img: "https://blue-label.jp/wp/wp-content/uploads/2023/08/f8b0591b0461341e2e32862778afacc1-scaled.jpg", pos: "top", zoom: 1.8 },
+  { id: 82, name: "山時 聡真", search: "さんとき そうま santoki soma", img: "https://www.sankei.com/resizer/v2/7C2MSTJLMFJ6ZPG43SGRHNYGVU.jpg?auth=8f99bc2a86dfa1d76d47488bc44927636a17d2e760369de5ba6dca0edb8af942&quality=40&focal=1053%2C1137&width=1200", pos: "top" },
+  { id: 83, name: "ゆうたろう", search: "ゆうたろう yutarou", img: "https://asobisystem.com/wp-content/uploads/2022/07/yutaro2025_topthum.jpg", pos: "top" },
+  { id: 84, name: "祐楽", search: "ゆうが yuga", img: "https://www.stardust.co.jp/wp-content/uploads/2022/05/yuga_sen02-367x550.png", pos: "top", zoom: 1.6 },
+  { id: 85, name: "渡辺 色", search: "わたなべ いろ watanabe iro", img: "https://michelle-e.jp/wp/wp-content/uploads/2023/09/IMG_6855-scaled-e1734352335246.jpg", pos: "top" }
+];
+
+// 初期表示時に人数を自動反映
+window.addEventListener('DOMContentLoaded', () => {
+  const count = ACTORS.length;
+  document.getElementById('total-count').innerText = count;
+  document.getElementById('catalogCount').innerText = count;
+  document.getElementById('catalogTotalCount').innerText = count;
+});
+
+function showScreen(screenId) {
+  const screens = ['screen-main', 'screen-stage1', 'screen-stage2', 'screen-stage3', 'screen-result', 'screen-catalog'];
+  screens.forEach(id => {
+    const el = document.getElementById(id);
+    if(el) el.style.display = (id === screenId) ? 'block' : 'none';
+  });
+}
+  
+  function createActorCardInner(actor) {
+  const position = actor.pos || 'top';
+  const zoomVal = actor.zoom || 'var(--zoom-scale)';
+  
+  const imgHtml = actor.img 
+    ? `<img src="${actor.img}" alt="${actor.name}" class="square-img" style="object-position: ${position}; transform: scale(${zoomVal});">`
+    : `<div class="placeholder-icon">👤</div>`;
+  
+  return `
+    <div class="card-img-wrapper">${imgHtml}</div>
+    <div class="card-name">${actor.name}</div>
+  `;
+}
+
+function openCatalog() {
+  showScreen('screen-catalog');
+  document.getElementById('catalogSearch').value = '';
+  renderCatalog(ACTORS);
+}
+
+function renderCatalog(list) {
+  const container = document.getElementById('catalogList');
+  document.getElementById('catalogCount').innerText = list.length;
+  container.innerHTML = '';
+  
+  if (list.length === 0) {
+    container.innerHTML = '<div style="text-align:center; padding:20px; color:#888;">該当する俳優が見つかりません</div>';
+    return;
+  }
+
+  list.forEach((actor) => {
+    const item = document.createElement('div');
+    item.className = 'catalog-item';
+    const position = actor.pos || 'top';
+    const zoomVal = actor.zoom || 'var(--zoom-scale)';
+    const thumbHtml = actor.img 
+      ? `<img src="${actor.img}" alt="${actor.name}" class="square-img" style="object-position: ${position}; transform: scale(${zoomVal});">`
+      : `👤`;
+
+    item.innerHTML = `
+      <div class="catalog-left">
+        <div class="catalog-thumb">${thumbHtml}</div>
+        <span style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${actor.name}</span>
+      </div>
+      <span class="catalog-num">#${actor.id}</span>
+    `;
+    container.appendChild(item);
+  });
+}
+
+function filterCatalog() {
+  const query = document.getElementById('catalogSearch').value.toLowerCase().trim();
+  if (!query) {
+    renderCatalog(ACTORS);
+    return;
+  }
+  const filtered = ACTORS.filter(a => 
+    a.name.toLowerCase().includes(query) || (a.search && a.search.toLowerCase().includes(query))
+  );
+  renderCatalog(filtered);
+}
+
+let stage1Groups = [], stage1Index = 0, stage1SelectedGroups = [];
+function startStage1() {
+  showScreen('screen-stage1');
+  const shuffledActors = [...ACTORS].sort(() => Math.random() - 0.5);
+  stage1Groups = [];
+  for(let i=0; i<shuffledActors.length; i+=6) {
+    stage1Groups.push(shuffledActors.slice(i, i+6));
+  }
+  stage1Index = 0; 
+  stage1SelectedGroups = [];
+  renderStage1();
+}
+
+function renderStage1() {
+  const grid = document.getElementById('stage1-grid');
+  grid.innerHTML = '';
+  
+  const currentGroupSelected = stage1SelectedGroups[stage1Index] || [];
+
+  stage1Groups[stage1Index].forEach(actor => {
+    const card = document.createElement('div');
+    card.className = 'card';
+    if (currentGroupSelected.some(a => a.id === actor.id)) {
+      card.classList.add('selected');
+    }
+    card.innerHTML = createActorCardInner(actor);
+    card.onclick = () => {
+      const selectedCards = grid.querySelectorAll('.card.selected');
+      if(card.classList.contains('selected')) {
+        card.classList.remove('selected');
+      } else {
+        if(selectedCards.length >= 3) { alert('最大3人までです'); return; }
+        card.classList.add('selected');
+      }
+    };
+    grid.appendChild(card);
+  });
+}
+
+function nextStage1Group() {
+  const grid = document.getElementById('stage1-grid');
+  const selectedActors = [];
+  grid.querySelectorAll('.card.selected').forEach(card => {
+    const name = card.querySelector('.card-name').innerText;
+    const found = ACTORS.find(a => a.name === name);
+    if(found) selectedActors.push(found);
+  });
+  
+  stage1SelectedGroups[stage1Index] = selectedActors;
+  stage1Index++;
+
+  if(stage1Index < stage1Groups.length) {
+    renderStage1();
+  } else {
+    let allSelected = [];
+    stage1SelectedGroups.forEach(group => allSelected.push(...group));
+    startStage2(allSelected);
+  }
+}
+
+function prevStage1Group() {
+  if (stage1Index > 0) {
+    stage1Index--;
+    renderStage1();
+  } else {
+    showScreen('screen-main');
+  }
+}
+
+let stage2Groups = [], stage2Index = 0, stage2SelectedGroups = [], cachedStage1Selected = [];
+function startStage2(selectedFromStage1) {
+  if(selectedFromStage1.length <= 4) { startStage3(selectedFromStage1); return; }
+  showScreen('screen-stage2');
+  cachedStage1Selected = selectedFromStage1;
+  const shuffledSelected = [...selectedFromStage1].sort(() => Math.random() - 0.5);
+  stage2Groups = [];
+  for(let i=0; i<shuffledSelected.length; i+=4) {
+    stage2Groups.push(shuffledSelected.slice(i, i+4));
+  }
+  stage2Index = 0; 
+  stage2SelectedGroups = [];
+  renderStage2();
+}
+
+function renderStage2() {
+  const grid = document.getElementById('stage2-grid');
+  grid.innerHTML = '';
+  
+  const currentGroupSelected = stage2SelectedGroups[stage2Index] || [];
+
+  stage2Groups[stage2Index].forEach(actor => {
+    const card = document.createElement('div');
+    card.className = 'card';
+    if (currentGroupSelected.some(a => a.id === actor.id)) {
+      card.classList.add('selected');
+    }
+    card.innerHTML = createActorCardInner(actor);
+    card.onclick = () => card.classList.toggle('selected');
+    grid.appendChild(card);
+  });
+}
+
+function nextStage2Group() {
+  const grid = document.getElementById('stage2-grid');
+  const selectedActors = [];
+  grid.querySelectorAll('.card.selected').forEach(card => {
+    const name = card.querySelector('.card-name').innerText;
+    const found = ACTORS.find(a => a.name === name);
+    if(found) selectedActors.push(found);
+  });
+
+  stage2SelectedGroups[stage2Index] = selectedActors;
+  stage2Index++;
+
+  if(stage2Index < stage2Groups.length) {
+    renderStage2();
+  } else {
+    let allStage2Selected = [];
+    stage2SelectedGroups.forEach(group => allStage2Selected.push(...group));
+    startStage3(allStage2Selected);
+  }
+}
+
+function prevStage2Group() {
+  if (stage2Index > 0) {
+    stage2Index--;
+    renderStage2();
+  } else {
+    stage1Index = stage1Groups.length - 1;
+    showScreen('screen-stage1');
+    renderStage1();
+  }
+}
+
+let finalCandidates = [], sortPairs = [], currentPairIndex = 0, actorScores = {};
+function startStage3(candidates) {
+  showScreen('screen-stage3');
+  finalCandidates = candidates.length > 0 ? candidates : ACTORS;
+  if(finalCandidates.length === 1) { showResult(finalCandidates); return; }
+  actorScores = {};
+  finalCandidates.forEach(a => actorScores[a.id] = 0);
+  sortPairs = [];
+  for(let i=0; i<finalCandidates.length; i++) {
+    for(let j=i+1; j<finalCandidates.length; j++) {
+      sortPairs.push([finalCandidates[i], finalCandidates[j]]);
+    }
+  }
+  sortPairs = sortPairs.sort(() => Math.random() - 0.5).slice(0, 12);
+  currentPairIndex = 0;
+  renderStage3();
+}
+
+function renderStage3() {
+  if(currentPairIndex >= sortPairs.length) {
+    const sorted = [...finalCandidates].sort((a,b) => actorScores[b.id] - actorScores[a.id]);
+    showResult(sorted);
+    return;
+  }
+  const grid = document.getElementById('stage3-grid');
+  grid.innerHTML = '';
+  sortPairs[currentPairIndex].forEach(actor => {
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.innerHTML = createActorCardInner(actor);
+    card.onclick = () => {
+      actorScores[actor.id]++;
+      currentPairIndex++;
+      renderStage3();
+    };
+    grid.appendChild(card);
+  });
+}
+
+function prevStage3Pair() {
+  if (currentPairIndex > 0) {
+    currentPairIndex--;
+    renderStage3();
+  } else {
+    startStage2(cachedStage1Selected);
+  }
+}
+
+function showResult(sortedActors) {
+  showScreen('screen-result');
+  const gridContainer = document.getElementById('grid-9-container');
+  gridContainer.innerHTML = '';
+
+  const layoutRanks = [4, 5, 6, 2, 1, 3, 7, 8, 9];
+
+  layoutRanks.forEach(rank => {
+    const actor = sortedActors[rank - 1];
+    const div = document.createElement('div');
+    div.className = `grid-9-card ${rank === 1 ? 'rank-1' : ''}`;
+    
+    if (actor) {
+      const position = actor.pos || 'top';
+      const zoomVal = actor.zoom || 'var(--zoom-scale)';
+      const thumbHtml = actor.img 
+        ? `<img src="${actor.img}" alt="${actor.name}" class="square-img" style="object-position: ${position}; transform: scale(${zoomVal});">`
+        : `👤`;
+
+      div.innerHTML = `
+        <div class="badge">${rank}位</div>
+        <div class="grid-9-thumb">${thumbHtml}</div>
+        <div class="name">${actor.name}</div>
+      `;
+    } else {
+      div.style.visibility = 'hidden';
+    }
+    gridContainer.appendChild(div);
+  });
+
+  const subContainer = document.getElementById('sub-result-container');
+  const subList = document.getElementById('result-list');
+  subList.innerHTML = '';
+  
+  if (sortedActors.length > 9) {
+    subContainer.style.display = 'block';
+    for (let i = 9; i < sortedActors.length; i++) {
+      const actor = sortedActors[i];
+      const li = document.createElement('li');
+      li.className = 'ranking-item';
+      const position = actor.pos || 'top';
+      const zoomVal = actor.zoom || 'var(--zoom-scale)';
+      const thumbHtml = actor.img 
+        ? `<img src="${actor.img}" alt="${actor.name}" class="square-img" style="object-position: ${position}; transform: scale(${zoomVal});">`
+        : `👤`;
+
+      li.innerHTML = `
+        <div class="ranking-num">${i + 1}</div>
+        <div class="catalog-thumb">${thumbHtml}</div>
+        <div style="font-weight:bold; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${actor.name}</div>
+      `;
+      subList.appendChild(li);
+    }
+  } else {
+    subContainer.style.display = 'none';
+  }
+}
+</script>
+</body>
+</html>
